@@ -3,10 +3,28 @@ import plotly.graph_objects as go
 import os
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI()
 
-@app.post("/uploadfile/")
+# Настройка CORS
+origins = [
+    "http://localhost:5173",
+    "http://localhost:81" # Разрешить доступ с этого домена
+    # Добавьте другие домены, если необходимо
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Список разрешенных доменов
+    allow_credentials=True,
+    allow_methods=["*"],     # Разрешить все методы (GET, POST и т.д.)
+    allow_headers=["*"],     # Разрешить все заголовки
+)
+
+
+@app.post("/uploadfile")
 async def upload_and_post_file(file: UploadFile = File(...)):
     file_location = f"temp_{file.filename}"
     with open(file_location, "wb") as f:
@@ -34,7 +52,7 @@ async def upload_and_post_file(file: UploadFile = File(...)):
         os.remove(file_location)
 
     # Возврат HTML файла
-    with open(output_file, 'r') as f:
+    with open(output_file, 'rb') as f:
         html_content = f.read()
 
     # Удаление HTML файла после отправки
